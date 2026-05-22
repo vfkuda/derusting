@@ -15,6 +15,8 @@ trait Parsable: Sized {
 }
 
 mod stdp {
+    use std::num::{NonZeroI32, NonZeroU32};
+
     // parsers for std types
     use super::Parser;
 
@@ -39,15 +41,11 @@ mod stdp {
                 .unwrap_or(remaining.len());
             let value = u32::from_str_radix(&remaining[..end_idx], if is_hex { 16 } else { 10 })
                 .map_err(|_| ())?;
-            // подсказка: вместо if можно использовать tight-тип std::num::NonZeroU32
-            //            (ограничиться NonZeroU32::new(value).ok_or(()).get() - норм)
-            //            или даже заиспользовать tightness
-            if value == 0 {
-                return Err(()); // в наших логах нет нулей, ноль в операции - фикция
-            }
+            let value = NonZeroU32::new(value).ok_or(())?.get();
             Ok((remaining[end_idx..].to_string(), value))
         }
     }
+
     /// Знаковые числа
     #[derive(Debug)]
     pub struct I32;
@@ -60,12 +58,11 @@ mod stdp {
                 .find_map(|(idx, c)| (!c.is_ascii_digit()).then_some(idx))
                 .unwrap_or(input.len());
             let value = input[..end_idx].parse().map_err(|_| ())?;
-            if value == 0 {
-                return Err(()); // в наших логах нет нулей, ноль в операции - фикция
-            }
+            let value = NonZeroI32::new(value).ok_or(())?.get();
             Ok((input[end_idx..].to_string(), value))
         }
     }
+
     /// Шестнадцатеричные байты (пригодится при парсинге блобов)
     #[derive(Debug, Clone)]
     pub struct Byte;

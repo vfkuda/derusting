@@ -15,7 +15,7 @@ The following code issues / bad practices need to be fixed:
 [x] Using unsafe unnecessarily.
 [x] Having a singleton that can be avoided.
     [!NOTE] I would rather prefer to keep once assembled object as a singleton. But I change the interface
-[ ] Using excessive validation instead of tight types.
+[x] Using excessive validation instead of tight types.
 [x] Duplicating code for parameters of different types instead of using generics.
 [x] Using trait objects in places where generics would be sufficient.
 [ ] Using a sequence of if statements instead of a single match.
