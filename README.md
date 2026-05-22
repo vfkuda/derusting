@@ -9,17 +9,17 @@
 
 The following code issues / bad practices need to be fixed:
 
-1. Using unnecessary clone() calls instead of references.
-1. Using Rc<RefCell<T>> where references would be sufficient.
-1. Using loops instead of iterators.
-1. Using unsafe unnecessarily.
-1. Having a singleton that can be avoided.
-1. Using excessive validation instead of tight types.
-1. Duplicating code for parameters of different types instead of using generics.
-1. Using trait objects in places where generics would be sufficient.
-1. Using a sequence of if statements instead of a single match.
-1. Having an enum where one of the variants occupies several kilobytes of stack space.
-1. Using panics instead of returning errors.
+[ ] Using unnecessary clone() calls instead of references.
+[x] Using Rc<RefCell<T>> where references would be sufficient.
+[ ] Using loops instead of iterators.
+[ ] Using unsafe unnecessarily.
+[ ] Having a singleton that can be avoided.
+[ ] Using excessive validation instead of tight types.
+[ ] Duplicating code for parameters of different types instead of using generics.
+[ ] Using trait objects in places where generics would be sufficient.
+[ ] Using a sequence of if statements instead of a single match.
+[ ] Having an enum where one of the variants occupies several kilobytes of stack space.
+[ ] Using panics instead of returning errors.
 
 [!HINT]
 Tests shall keep passing after refactoring: 
