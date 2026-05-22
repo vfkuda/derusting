@@ -1,5 +1,4 @@
 pub mod parse;
-use std::ffi::c_longlong;
 
 use parse::*;
 
@@ -8,7 +7,7 @@ pub enum ReadMode {
     All,
     /// Режим чтения из логов только ошибок
     Errors,
-    /// Режим чтения из логов только операций, касающихся деген
+    /// Режим чтения из логов только операций, касающихся денег
     Exchanges,
 }
 impl ReadMode {
@@ -33,21 +32,9 @@ impl ReadMode {
         }
     }
 }
-// // подсказка: лучше использовать enum и match
-// /// Режим чтения из логов всего подряд
-// pub const READ_MODE_ALL: u8 = 0;
-// /// Режим чтения из логов только ошибок
-// pub const READ_MODE_ERRORS: u8 = 1;
-// /// Режим чтения из логов только операций, касающихся деген
-// pub const READ_MODE_EXCHANGES: u8 = 2;
 
-/// Для `Box<dyn много трейтов, помимо auto-трейтов>`, (`rustc E0225`)
-/// `only auto traits can be used as additional traits in a trait object`
-/// `consider creating a new trait with all of these as supertraits and using that trait here instead`
 pub trait MyReader: std::io::Read + std::fmt::Debug + 'static {}
 impl<T: std::io::Read + std::fmt::Debug + 'static> MyReader for T {}
-// подсказка: вместо trait-объекта можно дженерик
-/// Итератор, на выходе которого - строки распарсенной структуры данных
 
 const LOG_READER_CAP: usize = 4096;
 #[derive(Debug)]
@@ -68,7 +55,7 @@ impl<R: MyReader> LogIterator<R> {
 impl<R: MyReader> Iterator for LogIterator<R> {
     type Item = parse::LogLine;
 
-    // read next not empty string
+    // read next item
     fn next(&mut self) -> Option<Self::Item> {
         let mut line;
         // read next not empty string
