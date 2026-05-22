@@ -52,12 +52,10 @@ fn main() {
     println!("Placeholder для экспериментов с cli");
 
     let parsing_demo =
-        r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#
-            .to_string();
-    let announcements = analysis::parse::just_parse_multihelper::<analysis::parse::Announcements>(
-        parsing_demo,
-    )
-    .unwrap();
+        r#"[UserBackets{"user_id":"Bob","backets":[Backet{"asset_id":"milk","count":3,},],},]"#;
+    let announcements =
+        analysis::parse::just_parse_multihelper::<analysis::parse::Announcements>(parsing_demo)
+            .unwrap();
     println!("demo-parsed: {:?}", announcements);
 
     let args = std::env::args().collect::<Vec<_>>();

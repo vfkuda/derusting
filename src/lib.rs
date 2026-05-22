@@ -67,7 +67,7 @@ impl<R: MyReader> Iterator for LogIterator<R> {
             }
         }
 
-        let (remaining, result) = LogLineParser::parse(line.trim().to_string()).ok()?;
+        let (remaining, result) = LogLineParser::parse(line.trim()).ok()?;
         remaining.trim().is_empty().then_some(result)
     }
 }
