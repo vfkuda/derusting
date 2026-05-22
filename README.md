@@ -19,7 +19,7 @@ The following code issues / bad practices need to be fixed:
 [x] Duplicating code for parameters of different types instead of using generics.
 [x] Using trait objects in places where generics would be sufficient.
 [ ] Using a sequence of if statements instead of a single match.
-[ ] Having an enum where one of the variants occupies several kilobytes of stack space.
+[x] Having an enum where one of the variants occupies several kilobytes of stack space.
 [ ] Using panics instead of returning errors.
 
 [!HINT]
