@@ -51,23 +51,27 @@ impl<T: std::io::Read + std::fmt::Debug + 'static> MyReader for T {}
 
 const LOG_READER_CAP: usize = 4096;
 #[derive(Debug)]
-struct LogIterator {
-    lines: std::io::Lines<std::io::BufReader<Box<dyn MyReader>>>,
+
+struct LogIterator<R: MyReader> {
+    lines: std::io::Lines<std::io::BufReader<R>>,
 }
-impl LogIterator {
-    fn new(reader: Box<dyn MyReader>) -> Self {
+
+impl<R: MyReader> LogIterator<R> {
+    fn new(reader: R) -> Self {
         use std::io::BufRead;
         Self {
             lines: std::io::BufReader::with_capacity(LOG_READER_CAP, reader).lines(),
         }
     }
 }
-impl Iterator for LogIterator {
+
+impl<R: MyReader> Iterator for LogIterator<R> {
     type Item = parse::LogLine;
 
-    // return next not empty string
+    // read next not empty string
     fn next(&mut self) -> Option<Self::Item> {
         let mut line;
+        // read next not empty string
         loop {
             line = self.lines.next()?.ok()?;
             line = line.trim().to_owned();
@@ -82,7 +86,7 @@ impl Iterator for LogIterator {
 }
 
 /// Принимает поток байт, отдаёт отфильтрованные и распарсенные логи
-pub fn read_log(input: Box<dyn MyReader>, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
+pub fn read_log<R: MyReader>(input: R, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
     let logs = LogIterator::new(input);
 
     logs.filter(|ll| request_ids.is_empty() || request_ids.contains(&ll.request_id))
@@ -162,10 +166,10 @@ App::Journal BuyAsset UserBacket{"user_id":"Alice","backet":Backet{"asset_id":"m
 
     #[test]
     fn test_all() {
-        let bytes_reader1: Box<dyn MyReader> = Box::new(SOURCE1.as_bytes());
+        let bytes_reader1 = SOURCE1.as_bytes();
         assert_eq!(read_log(bytes_reader1, ReadMode::All, vec![]).len(), 1);
 
-        let bytes_reader2: Box<dyn MyReader> = Box::new(SOURCE.as_bytes());
+        let bytes_reader2 = SOURCE.as_bytes();
         let all_parsed = read_log(bytes_reader2, ReadMode::All, vec![]);
 
         println!("all parsed:");

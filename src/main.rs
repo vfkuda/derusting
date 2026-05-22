@@ -65,7 +65,7 @@ fn main() {
         std::env::current_dir().unwrap().to_string_lossy()
     );
 
-    let file_reader: Box<dyn analysis::MyReader> = Box::new(std::fs::File::open(filename).unwrap());
+    let file_reader = std::fs::File::open(filename).unwrap();
 
     let logs = analysis::read_log(file_reader, analysis::ReadMode::All, vec![]);
     println!("got logs:");

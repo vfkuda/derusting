@@ -12,11 +12,12 @@ The following code issues / bad practices need to be fixed:
 [ ] Using unnecessary clone() calls instead of references.
 [x] Using Rc<RefCell<T>> where references would be sufficient.
 [ ] Using loops instead of iterators.
-[ ] Using unsafe unnecessarily.
-[ ] Having a singleton that can be avoided.
+[x] Using unsafe unnecessarily.
+[x] Having a singleton that can be avoided.
+    [!NOTE] I would rather prefer to keep once assembled object as a singleton. But I change the interface
 [ ] Using excessive validation instead of tight types.
 [ ] Duplicating code for parameters of different types instead of using generics.
-[ ] Using trait objects in places where generics would be sufficient.
+[x] Using trait objects in places where generics would be sufficient.
 [ ] Using a sequence of if statements instead of a single match.
 [ ] Having an enum where one of the variants occupies several kilobytes of stack space.
 [ ] Using panics instead of returning errors.
