@@ -1453,22 +1453,17 @@ impl Parsable for LogLine {
 }
 
 /// Парсер строки логов
-pub struct LogLineParser {
-    parser: std::sync::OnceLock<<LogLine as Parsable>::Parser>,
-}
+pub struct LogLineParser {}
 impl LogLineParser {
-    pub fn parse(&self, input: String) -> Result<(String, LogLine), ()> {
-        self.parser
+    pub fn parse(input: String) -> Result<(String, LogLine), ()> {
+        // I would rather prefer to keep once assembled object as a singleton
+        static PARSER: std::sync::OnceLock<<LogLine as Parsable>::Parser> =
+            std::sync::OnceLock::new();
+        PARSER
             .get_or_init(|| <LogLine as Parsable>::parser())
             .parse(input)
     }
 }
-// подсказка: singleton, без которого можно обойтись
-// парсеры не страшно вытащить в pub
-/// Единожды собранный парсер логов
-pub static LOG_LINE_PARSER: LogLineParser = LogLineParser {
-    parser: std::sync::OnceLock::new(),
-};
 
 #[cfg(test)]
 mod test {

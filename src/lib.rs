@@ -1,13 +1,45 @@
 pub mod parse;
+use std::ffi::c_longlong;
+
 use parse::*;
 
-// подсказка: лучше использовать enum и match
-/// Режим чтения из логов всего подряд
-pub const READ_MODE_ALL: u8 = 0;
-/// Режим чтения из логов только ошибок
-pub const READ_MODE_ERRORS: u8 = 1;
-/// Режим чтения из логов только операций, касающихся деген
-pub const READ_MODE_EXCHANGES: u8 = 2;
+pub enum ReadMode {
+    /// Режим чтения из логов всего подряд
+    All,
+    /// Режим чтения из логов только ошибок
+    Errors,
+    /// Режим чтения из логов только операций, касающихся деген
+    Exchanges,
+}
+impl ReadMode {
+    pub fn matches_kind(&self, log_kind: &LogKind) -> bool {
+        match self {
+            ReadMode::All => true,
+            ReadMode::Errors => matches!(
+                log_kind,
+                LogKind::System(SystemLogKind::Error(_)) | LogKind::App(AppLogKind::Error(_))
+            ),
+            ReadMode::Exchanges => matches!(
+                log_kind,
+                LogKind::App(AppLogKind::Journal(
+                    AppLogJournalKind::BuyAsset(_)
+                        | AppLogJournalKind::SellAsset(_)
+                        | AppLogJournalKind::CreateUser { .. }
+                        | AppLogJournalKind::RegisterAsset { .. }
+                        | AppLogJournalKind::DepositCash(_)
+                        | AppLogJournalKind::WithdrawCash(_)
+                ))
+            ),
+        }
+    }
+}
+// // подсказка: лучше использовать enum и match
+// /// Режим чтения из логов всего подряд
+// pub const READ_MODE_ALL: u8 = 0;
+// /// Режим чтения из логов только ошибок
+// pub const READ_MODE_ERRORS: u8 = 1;
+// /// Режим чтения из логов только операций, касающихся деген
+// pub const READ_MODE_EXCHANGES: u8 = 2;
 
 /// Для `Box<dyn много трейтов, помимо auto-трейтов>`, (`rustc E0225`)
 /// `only auto traits can be used as additional traits in a trait object`
@@ -33,7 +65,7 @@ impl LogIterator {
 impl Iterator for LogIterator {
     type Item = parse::LogLine;
 
-    // return not empty string
+    // return next not empty string
     fn next(&mut self) -> Option<Self::Item> {
         let mut line;
         loop {
@@ -44,61 +76,18 @@ impl Iterator for LogIterator {
             }
         }
 
-        let (remaining, result) = LOG_LINE_PARSER.parse(line.trim().to_string()).ok()?;
+        let (remaining, result) = LogLineParser::parse(line.trim().to_string()).ok()?;
         remaining.trim().is_empty().then_some(result)
     }
 }
 
 /// Принимает поток байт, отдаёт отфильтрованные и распарсенные логи
-pub fn read_log(input: Box<dyn MyReader>, mode: u8, request_ids: Vec<u32>) -> Vec<LogLine> {
+pub fn read_log(input: Box<dyn MyReader>, mode: ReadMode, request_ids: Vec<u32>) -> Vec<LogLine> {
     let logs = LogIterator::new(input);
-    let mut collected = Vec::new();
-    // подсказка: можно обойтись итераторами
-    for log in logs {
-        if request_ids.is_empty() || {
-            let mut request_id_found = false;
-            for request_id in &request_ids {
-                if *request_id == log.request_id {
-                    request_id_found = true;
-                    break;
-                }
-            }
-            request_id_found
-        }
-        // подсказка: лучше match
-        && if mode == READ_MODE_ALL {
-                true
-            }
-            else if mode == READ_MODE_ERRORS {
-                matches!(
-                    &log.kind,
-                    LogKind::System(
-                        SystemLogKind::Error(_)) | LogKind::App(AppLogKind::Error(_)
-                    )
-                )
-            }
-            else if mode == READ_MODE_EXCHANGES {
-                matches!(
-                    &log.kind,
-                    LogKind::App(AppLogKind::Journal(
-                        AppLogJournalKind::BuyAsset(_)
-                        | AppLogJournalKind::SellAsset(_)
-                        | AppLogJournalKind::CreateUser{..}
-                        | AppLogJournalKind::RegisterAsset{..}
-                        | AppLogJournalKind::DepositCash(_)
-                        | AppLogJournalKind::WithdrawCash(_)
-                    ))
-                )
-            }
-            else {
-                // подсказка: паниковать в библиотечном коде - нехорошо
-                panic!("unknown mode {}", mode)
-            }
-        {
-            collected.push(log);
-        }
-    }
-    collected
+
+    logs.filter(|ll| request_ids.is_empty() || request_ids.contains(&ll.request_id))
+        .filter(|ll| mode.matches_kind(&ll.kind))
+        .collect::<Vec<LogLine>>()
 }
 
 #[cfg(test)]
@@ -174,10 +163,10 @@ App::Journal BuyAsset UserBacket{"user_id":"Alice","backet":Backet{"asset_id":"m
     #[test]
     fn test_all() {
         let bytes_reader1: Box<dyn MyReader> = Box::new(SOURCE1.as_bytes());
-        assert_eq!(read_log(bytes_reader1, READ_MODE_ALL, vec![]).len(), 1);
+        assert_eq!(read_log(bytes_reader1, ReadMode::All, vec![]).len(), 1);
 
         let bytes_reader2: Box<dyn MyReader> = Box::new(SOURCE.as_bytes());
-        let all_parsed = read_log(bytes_reader2, READ_MODE_ALL, vec![]);
+        let all_parsed = read_log(bytes_reader2, ReadMode::All, vec![]);
 
         println!("all parsed:");
         all_parsed

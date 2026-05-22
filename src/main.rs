@@ -67,7 +67,7 @@ fn main() {
 
     let file_reader: Box<dyn analysis::MyReader> = Box::new(std::fs::File::open(filename).unwrap());
 
-    let logs = analysis::read_log(file_reader, analysis::READ_MODE_ALL, vec![]);
+    let logs = analysis::read_log(file_reader, analysis::ReadMode::All, vec![]);
     println!("got logs:");
     logs.iter().for_each(|parsed| println!("  {:?}", parsed));
 }
